@@ -213,6 +213,18 @@ echo -e "${CYAN}⚙️  Generating optimized config...${NC}"
 CONFIG_DIR="$INSTALL_HOME/.openclaw"
 mkdir -p "$CONFIG_DIR"
 
+# Build providers block safely without trailing commas
+PROVIDERS=""
+[ -n "$ANTHROPIC_KEY" ] && PROVIDERS="\"anthropic\": {\"apiKey\": \"$ANTHROPIC_KEY\"}"
+if [ -n "$GOOGLE_KEY" ]; then
+    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS, "
+    PROVIDERS="$PROVIDERS\"google\": {\"apiKey\": \"$GOOGLE_KEY\"}"
+fi
+if [ -n "$OPENROUTER_KEY" ]; then
+    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS, "
+    PROVIDERS="$PROVIDERS\"openrouter\": {\"apiKey\": \"$OPENROUTER_KEY\"}"
+fi
+
 cat > "$CONFIG_DIR/openclaw.json" << EOF
 {
   "agents": {
@@ -234,38 +246,7 @@ cat > "$CONFIG_DIR/openclaw.json" << EOF
   },
   "models": {
     "providers": {
-EOF
-
-# Add API keys conditionally
-if [ -n "$ANTHROPIC_KEY" ]; then
-    cat >> "$CONFIG_DIR/openclaw.json" << EOF
-      "anthropic": {
-        "apiKey": "$ANTHROPIC_KEY"
-      },
-EOF
-fi
-
-if [ -n "$GOOGLE_KEY" ]; then
-    cat >> "$CONFIG_DIR/openclaw.json" << EOF
-      "google": {
-        "apiKey": "$GOOGLE_KEY"
-      },
-EOF
-fi
-
-if [ -n "$OPENROUTER_KEY" ]; then
-    cat >> "$CONFIG_DIR/openclaw.json" << EOF
-      "openrouter": {
-        "apiKey": "$OPENROUTER_KEY"
-      },
-EOF
-fi
-
-# Close providers object
-# Remove trailing comma before the last closing brace in the providers block
-sed -i ':a;N;$!ba;s/,\n      }/\n      }/g' "$CONFIG_DIR/openclaw.json"
-
-cat >> "$CONFIG_DIR/openclaw.json" << EOF
+      $PROVIDERS
     }
   }
 }

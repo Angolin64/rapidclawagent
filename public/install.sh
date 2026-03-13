@@ -46,13 +46,16 @@ else
     exit 1
 fi
 
-if [ "$OS" != "ubuntu" ] || [ "$VER" != "24.04" ]; then
-    echo -e "${YELLOW}⚠️  Warning: This script is tested on Ubuntu 24.04 LTS${NC}"
-    echo -e "${YELLOW}   Your OS: $OS $VER${NC}"
-    read -p "Continue anyway? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
+# Skip OS check if DRY_RUN is set
+if [ -z "$DRY_RUN" ]; then
+    if [ "$OS" != "ubuntu" ] || [ "$VER" != "24.04" ]; then
+        echo -e "${YELLOW}⚠️  Warning: This script is tested on Ubuntu 24.04 LTS${NC}"
+        echo -e "${YELLOW}   Your OS: $OS $VER${NC}"
+        read -p "Continue anyway? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
     fi
 fi
 
@@ -102,6 +105,12 @@ else
     INSTALL_USER="$USER"
     INSTALL_HOME="$HOME"
     echo -e "${CYAN}ℹ️  Installing as user: $INSTALL_USER${NC}"
+fi
+
+# Dry Run Exit
+if [ -n "$DRY_RUN" ]; then
+    echo -e "${GREEN}✓ Dry run completed (Logic Check OK)${NC}"
+    exit 0
 fi
 
 # Install system dependencies

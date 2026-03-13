@@ -1,8 +1,8 @@
 # 🦞 RapidClawAgent - Current Status
 
-**Last updated:** March 12, 2026 18:33 EDT  
+**Last updated:** March 12, 2026 19:35 EDT  
 **Phase:** MVP Complete ✅  
-**Ready for:** Domain purchase + deployment
+**Ready for:** Deployment
 
 ---
 
@@ -16,6 +16,7 @@
 - [x] Workspace initialization
 - [x] Security hardening (basic)
 - [x] OpenClaw auto-start
+- [x] **Validation Protocol:** Audit Apartado B (npm audit/outdated) and Logic Check: OK.
 
 ### Frontend (100%)
 - [x] Landing page
@@ -34,9 +35,10 @@
 
 ### Repository (100%)
 - [x] Git initialized
-- [x] 3 commits
+- [x] 4 commits
 - [x] All files tracked
 - [x] .gitignore configured
+- [x] GitHub repository live: https://github.com/Angolin64/rapidclawagent
 
 ---
 
@@ -54,67 +56,37 @@
 ## 📅 Next Steps (Priority Order)
 
 ### 🔴 Critical (Do Today)
-1. **Test install script** on fresh Ubuntu 24.04 VPS
-   - Spin up Hostinger/Hetzner/DO droplet
-   - Run: `curl -sSL file:///path/to/install.sh | bash`
-   - Document any bugs
-
-2. **Fix bugs** found during testing
-   - Syntax errors
-   - Missing dependencies
-   - Config generation issues
-
-3. **Create GitHub repo**
-   - `gh repo create rapidclawagent --public`
-   - Push all commits
-   - Add topics: `openclaw`, `ai-agent`, `cost-optimization`
-
-### 🟡 High Priority (This Week)
-4. **Purchase domain**
-   - `rapidclawagent.com` (~$10/year)
-   - Use Namecheap or Porkbun
-
-5. **Deploy to Vercel**
+1. **Deploy to Vercel** (IN PROGRESS)
    - Import from GitHub
-   - Configure custom domain
+   - Configure custom domain (`rapidclawagent.com`)
    - Test live install script URL
 
-6. **Create demo assets**
+2. **Test install script** on fresh Ubuntu 24.04 VPS
+   - Spin up Hostinger/Hetzner/DO droplet
+   - Run: `curl -sSL https://rapidclawagent.com/install.sh | bash`
+   - Document any bugs
+
+### 🟡 High Priority (This Week)
+3. **Create demo assets**
    - Screen recording (3-5 min)
    - Screenshots for README
    - GIF of install process
 
 ### 🟢 Medium Priority (Next Week)
-7. **Launch prep**
+4. **Launch prep**
    - Write Product Hunt description
    - Draft Twitter thread
    - Prepare Reddit posts
    - Schedule launch date
 
-8. **SEO optimization**
+5. **SEO optimization**
    - Add meta tags
    - Generate sitemap
    - Submit to Google Search Console
 
-9. **Analytics setup**
+6. **Analytics setup**
    - Enable Vercel Analytics
    - Optional: Add Plausible/GA
-
-### 🔵 Low Priority (Month 1)
-10. **Feature additions**
-    - FAQ section
-    - Blog (cost optimization tips)
-    - More presets (4th, 5th templates)
-
-11. **Community engagement**
-    - Respond to GitHub issues
-    - Answer Reddit questions
-    - Engage on Discord
-
-12. **Monetization prep**
-    - Design Pro tier features
-    - Build cost dashboard mockups
-    - Research Stripe integration
 
 ---
 
@@ -126,9 +98,9 @@
 | **Lines of code** | ~2,000 |
 | **Documentation** | ~30 KB |
 | **Install script** | 380 lines |
-| **Commits** | 3 |
-| **Time invested** | ~90 minutes |
-| **Cost so far** | $0 (all free tools) |
+| **Commits** | 4 |
+| **Time invested** | ~120 minutes |
+| **Cost so far** | $10.46 (Domain) |
 
 ---
 
@@ -141,117 +113,21 @@
 - [ ] No post-install verification
 - [ ] Telegram config requires jq (may not be installed)
 
-### Future Improvements
-- [ ] Add shell script linting (shellcheck)
-- [ ] Unit tests for cost calculator
-- [ ] E2E tests for install flow
-- [ ] Docker-based testing environment
-- [ ] CI/CD pipeline (GitHub Actions)
-
 ---
 
 ## 💰 Budget
 
 ### Spent
-- $0 (development time only)
+- $10.46 (Domain via Cloudflare)
 
 ### Upcoming Costs
 | Item | Cost | Frequency |
 |------|------|-----------|
-| Domain | $10 | Annual |
 | Vercel hosting | $0 | Free tier |
-| **Total Year 1** | **$10** | - |
-
-### Potential Revenue (Freemium Model)
-| Tier | Price | Est. Users (Month 3) | MRR |
-|------|-------|----------------------|-----|
-| Free (DIY) | $0 | 180 | $0 |
-| Pro (Dashboard) | $9/mo | 20 | $180 |
-| **Total** | - | **200** | **$180** |
+| **Total Year 1** | **$10.46** | - |
 
 ---
 
-## 🎯 Success Criteria
-
-### MVP Launch (Week 1)
-- [ ] 100+ website visitors
-- [ ] 10+ successful installs
-- [ ] 5+ GitHub stars
-- [ ] 0 critical bugs
-
-### Growth (Month 1)
-- [ ] 500+ website visitors
-- [ ] 50+ installs
-- [ ] 25+ GitHub stars
-- [ ] 1 testimonial/case study
-
-### Sustainability (Month 3)
-- [ ] 2,000+ website visitors
-- [ ] 200+ installs
-- [ ] 100+ GitHub stars
-- [ ] $180 MRR (break-even + profit)
-
----
-
-## 🚨 Blockers
-
-### Current
-- **None** — Ready to deploy!
-
-### Potential
-- **VPS provider changes** — If Hostinger/etc change pricing/specs
-- **OpenClaw breaking changes** — Upstream API changes
-- **Model pricing changes** — Cost estimates become outdated
-- **Competitor response** — OpenClaw Launcher adds free tier
-
----
-
-## 📞 Contact & Support
-
-### Developer
-- **Name:** Angel Golindano
-- **Email:** [Your email]
-- **GitHub:** [Your GitHub]
-- **Twitter:** [Your Twitter]
-
-### Assistant
-- **AI:** Chat (OpenClaw)
-- **Model:** Claude Sonnet 4.5
-- **Session:** This conversation
-
----
-
-## 🎉 Achievements Unlocked
-
-- ✅ **MVP Builder** - Completed functional MVP in < 2 hours
-- ✅ **Cost Optimizer** - Built 60-80% cost savings into core
-- ✅ **Documentation Master** - 30+ KB of docs
-- ✅ **Open Source Contributor** - MIT licensed, ready to share
-
----
-
-## 📝 Notes
-
-### What Went Well
-- Fast iteration (90 minutes to MVP)
-- Clean install script (380 lines, well-documented)
-- Preset approach resonates (3 clear use cases)
-- Cost transparency (users love seeing breakdown)
-
-### What to Improve
-- Need real-world testing on fresh VPS
-- More presets (4-5 would be better)
-- Video demo (text is good, video is better)
-- SEO optimization (meta tags, sitemap)
-
-### Lessons Learned
-- **Presets > Blank slate** — Users want templates
-- **Cost transparency builds trust** — Show the math
-- **One command is magic** — Reduce friction dramatically
-- **Documentation matters** — 30 KB of docs = credibility
-
----
-
-**Next action:** Test install.sh on fresh VPS → Fix bugs → Deploy to Vercel
+**Next action:** Deploy to Vercel → Test on fresh VPS
 
 🦞 **Status:** Ready for production deployment

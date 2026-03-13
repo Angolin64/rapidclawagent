@@ -261,8 +261,9 @@ if [ -n "$OPENROUTER_KEY" ]; then
 EOF
 fi
 
-# Close providers object (remove trailing comma)
-sed -i '$ s/,$//' "$CONFIG_DIR/openclaw.json"
+# Close providers object
+# Remove trailing comma before the last closing brace in the providers block
+sed -i ':a;N;$!ba;s/,\n      }/\n      }/g' "$CONFIG_DIR/openclaw.json"
 
 cat >> "$CONFIG_DIR/openclaw.json" << EOF
     }

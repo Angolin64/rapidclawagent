@@ -213,20 +213,27 @@ echo -e "${CYAN}⚙️  Generating optimized config...${NC}"
 CONFIG_DIR="$INSTALL_HOME/.openclaw"
 mkdir -p "$CONFIG_DIR"
 
+# Export variables for Python to avoid shell expansion syntax errors
+export ANTHROPIC_KEY GOOGLE_KEY OPENROUTER_KEY PRIMARY_MODEL CONTEXT_TOKENS BOOTSTRAP_MAX HEARTBEAT_EVERY HEARTBEAT_MODEL CONFIG_DIR
+
 # Use Python to generate valid JSON - safest way to handle keys and commas
-python3 - << EOF
+python3 - << 'EOF'
 import json, os
+
+def get_env(key, default=""):
+    return os.environ.get(key, default)
+
 config = {
     "agents": {
         "defaults": {
-            "model": "$PRIMARY_MODEL",
-            "contextTokens": $CONTEXT_TOKENS,
+            "model": get_env("PRIMARY_MODEL"),
+            "contextTokens": int(get_env("CONTEXT_TOKENS", "50000")),
             "thinkingDefault": "off",
-            "bootstrapMaxChars": $BOOTSTRAP_MAX,
+            "bootstrapMaxChars": int(get_env("BOOTSTRAP_MAX", "10000")),
             "bootstrapTotalMaxChars": 75000,
             "heartbeat": {
-                "every": "$HEARTBEAT_EVERY",
-                "model": "$HEARTBEAT_MODEL",
+                "every": get_env("HEARTBEAT_EVERY", "1h"),
+                "model": get_env("HEARTBEAT_MODEL", "google/gemini-2.5-flash"),
                 "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
             },
             "cache": {"retention": "short"}
@@ -234,16 +241,21 @@ config = {
     },
     "models": {"providers": {}}
 }
-if "$ANTHROPIC_KEY": config["models"]["providers"]["anthropic"] = {"apiKey": "$ANTHROPIC_KEY"}
-if "$GOOGLE_KEY": config["models"]["providers"]["google"] = {"apiKey": "$GOOGLE_KEY"}
-if "$OPENROUTER_KEY": config["models"]["providers"]["openrouter"] = {"apiKey": "$OPENROUTER_KEY"}
 
-with open("$CONFIG_DIR/openclaw.json", "w") as f:
+# Add keys if they have content and don't look like dummy text
+for key_name, env_var in [("anthropic", "ANTHROPIC_KEY"), ("google", "GOOGLE_KEY"), ("openrouter", "OPENROUTER_KEY")]:
+    val = get_env(env_var)
+    if val and len(val) > 10 and "read -p" not in val:
+        config["models"]["providers"][key_name] = {"apiKey": val}
+
+config_path = os.path.join(get_env("CONFIG_DIR"), "openclaw.json")
+with open(config_path, "w") as f:
     json.dump(config, f, indent=2)
 EOF
 
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠️  Python generation failed, using fallback...${NC}"
+    # Fallback with basic shell escaping
     cat > "$CONFIG_DIR/openclaw.json" << EOF
 {
   "agents": { "defaults": { "model": "$PRIMARY_MODEL", "contextTokens": $CONTEXT_TOKENS } },

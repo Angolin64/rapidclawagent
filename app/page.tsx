@@ -96,9 +96,17 @@ export default function Home() {
               curl -sSL https://rapidclawagent.com/install.sh | bash
             </code>
           </div>
-          <p className="text-sm text-slate-400">
-            Works on Ubuntu 24.04 LTS • Tested on Hostinger, Hetzner, DigitalOcean
-          </p>
+          <div className="flex flex-col gap-4 items-center">
+            <p className="text-sm text-slate-400">
+              Works on Ubuntu 24.04 LTS • Tested on Hostinger, Hetzner, DigitalOcean
+            </p>
+            <a 
+              href="/guia.md" 
+              className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors bg-cyan-400/10 px-4 py-2 rounded-full text-sm font-medium border border-cyan-400/20"
+            >
+              📖 ¿Primera vez? Lee la Guía para Principiantes
+            </a>
+          </div>
         </div>
       </section>
 

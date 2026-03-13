@@ -125,25 +125,12 @@ else
 fi
 echo -e "${GREEN}✓ System dependencies installed${NC}"
 
-# Install Node.js via Homebrew (OpenClaw standard)
-echo -e "${CYAN}📦 Setting up Homebrew & Node.js...${NC}"
-if ! command -v brew &> /dev/null; then
-    echo "  └─ Installing Homebrew..."
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" > /dev/null 2>&1
-    
-    # Add brew to PATH
-    if [ -d "/home/linuxbrew/.linuxbrew" ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$INSTALL_HOME/.bashrc"
-    fi
-    echo -e "${GREEN}  ✓ Homebrew installed${NC}"
-else
-    echo -e "${GREEN}  ✓ Homebrew already installed${NC}"
-fi
-
+# Install Node.js
+echo -e "${CYAN}📦 Setting up Node.js...${NC}"
 if ! command -v node &> /dev/null; then
-    echo "  └─ Installing Node.js 22..."
-    brew install node@22 > /dev/null 2>&1
+    echo "  └─ Installing Node.js 22 via NodeSource..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - > /dev/null 2>&1
+    apt-get install -y nodejs > /dev/null 2>&1
     echo -e "${GREEN}  ✓ Node.js installed${NC}"
 else
     NODE_VERSION=$(node --version)

@@ -213,16 +213,18 @@ echo -e "${CYAN}⚙️  Generating optimized config...${NC}"
 CONFIG_DIR="$INSTALL_HOME/.openclaw"
 mkdir -p "$CONFIG_DIR"
 
-# Build providers block safely without trailing commas
+# Build providers block safely without shell/sed issues
 PROVIDERS=""
-[ -n "$ANTHROPIC_KEY" ] && PROVIDERS="\"anthropic\": {\"apiKey\": \"$ANTHROPIC_KEY\"}"
+if [ -n "$ANTHROPIC_KEY" ]; then
+    PROVIDERS="\"anthropic\":{\"apiKey\":\"$ANTHROPIC_KEY\"}"
+fi
 if [ -n "$GOOGLE_KEY" ]; then
-    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS, "
-    PROVIDERS="$PROVIDERS\"google\": {\"apiKey\": \"$GOOGLE_KEY\"}"
+    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS,"
+    PROVIDERS="$PROVIDERS\"google\":{\"apiKey\":\"$GOOGLE_KEY\"}"
 fi
 if [ -n "$OPENROUTER_KEY" ]; then
-    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS, "
-    PROVIDERS="$PROVIDERS\"openrouter\": {\"apiKey\": \"$OPENROUTER_KEY\"}"
+    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS,"
+    PROVIDERS="$PROVIDERS\"openrouter\":{\"apiKey\":\"$OPENROUTER_KEY\"}"
 fi
 
 cat > "$CONFIG_DIR/openclaw.json" << EOF
@@ -245,9 +247,7 @@ cat > "$CONFIG_DIR/openclaw.json" << EOF
     }
   },
   "models": {
-    "providers": {
-      $PROVIDERS
-    }
+    "providers": { $PROVIDERS }
   }
 }
 EOF

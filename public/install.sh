@@ -213,44 +213,44 @@ echo -e "${CYAN}⚙️  Generating optimized config...${NC}"
 CONFIG_DIR="$INSTALL_HOME/.openclaw"
 mkdir -p "$CONFIG_DIR"
 
-# Build providers block safely without shell/sed issues
-PROVIDERS=""
-if [ -n "$ANTHROPIC_KEY" ]; then
-    PROVIDERS="\"anthropic\":{\"apiKey\":\"$ANTHROPIC_KEY\"}"
-fi
-if [ -n "$GOOGLE_KEY" ]; then
-    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS,"
-    PROVIDERS="$PROVIDERS\"google\":{\"apiKey\":\"$GOOGLE_KEY\"}"
-fi
-if [ -n "$OPENROUTER_KEY" ]; then
-    [ -n "$PROVIDERS" ] && PROVIDERS="$PROVIDERS,"
-    PROVIDERS="$PROVIDERS\"openrouter\":{\"apiKey\":\"$OPENROUTER_KEY\"}"
-fi
+# Use Python to generate valid JSON - safest way to handle keys and commas
+python3 - << EOF
+import json, os
+config = {
+    "agents": {
+        "defaults": {
+            "model": "$PRIMARY_MODEL",
+            "contextTokens": $CONTEXT_TOKENS,
+            "thinkingDefault": "off",
+            "bootstrapMaxChars": $BOOTSTRAP_MAX,
+            "bootstrapTotalMaxChars": 75000,
+            "heartbeat": {
+                "every": "$HEARTBEAT_EVERY",
+                "model": "$HEARTBEAT_MODEL",
+                "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
+            },
+            "cache": {"retention": "short"}
+        }
+    },
+    "models": {"providers": {}}
+}
+if "$ANTHROPIC_KEY": config["models"]["providers"]["anthropic"] = {"apiKey": "$ANTHROPIC_KEY"}
+if "$GOOGLE_KEY": config["models"]["providers"]["google"] = {"apiKey": "$GOOGLE_KEY"}
+if "$OPENROUTER_KEY": config["models"]["providers"]["openrouter"] = {"apiKey": "$OPENROUTER_KEY"}
 
-cat > "$CONFIG_DIR/openclaw.json" << EOF
+with open("$CONFIG_DIR/openclaw.json", "w") as f:
+    json.dump(config, f, indent=2)
+EOF
+
+if [ $? -ne 0 ]; then
+    echo -e "${YELLOW}⚠️  Python generation failed, using fallback...${NC}"
+    cat > "$CONFIG_DIR/openclaw.json" << EOF
 {
-  "agents": {
-    "defaults": {
-      "model": "$PRIMARY_MODEL",
-      "contextTokens": $CONTEXT_TOKENS,
-      "thinkingDefault": "off",
-      "bootstrapMaxChars": $BOOTSTRAP_MAX,
-      "bootstrapTotalMaxChars": 75000,
-      "heartbeat": {
-        "every": "$HEARTBEAT_EVERY",
-        "model": "$HEARTBEAT_MODEL",
-        "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
-      },
-      "cache": {
-        "retention": "short"
-      }
-    }
-  },
-  "models": {
-    "providers": { $PROVIDERS }
-  }
+  "agents": { "defaults": { "model": "$PRIMARY_MODEL", "contextTokens": $CONTEXT_TOKENS } },
+  "models": { "providers": { "anthropic": { "apiKey": "$ANTHROPIC_KEY" }, "google": { "apiKey": "$GOOGLE_KEY" } } }
 }
 EOF
+fi
 
 # Add Telegram if provided
 if [ -n "$TELEGRAM_TOKEN" ]; then

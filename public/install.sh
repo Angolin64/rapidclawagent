@@ -163,6 +163,12 @@ if [ -z "$ANTHROPIC_KEY" ] && [ -z "$GOOGLE_KEY" ]; then
     exit 1
 fi
 
+# Email capture (for install tracking + onboarding)
+echo ""
+echo -e "${CYAN}📧 Onboarding${NC}"
+echo ""
+read -p "Your email (optional — we'll send you the getting-started guide): " USER_EMAIL
+
 # Telegram Bot Token (optional)
 echo ""
 echo -e "${CYAN}💬 Messaging Channels${NC}"
@@ -432,3 +438,16 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo ""
 echo -e "${MAGENTA}🦞 Built with RapidClawAgent | Save 60-80% on AI costs${NC}"
 echo ""
+
+# Ping install-complete API (silent, non-blocking)
+if [ -n "$USER_EMAIL" ]; then
+    VPS_PROVIDER="Unknown"
+    # Try to detect VPS provider from hostname/IP
+    if curl -sf --max-time 2 https://api.ipify.org > /tmp/rca_ip.txt 2>/dev/null; then
+        VPS_PROVIDER=$(curl -sf --max-time 3 "https://ipinfo.io/$(cat /tmp/rca_ip.txt)/org" 2>/dev/null | sed 's/AS[0-9]* //' | cut -c1-30 || echo "Unknown")
+        rm -f /tmp/rca_ip.txt
+    fi
+    curl -sf --max-time 5 -X POST "https://rapidclawagent.com/api/install-complete" \
+        -H "Content-Type: application/json" \
+        -d "{\"email\":\"$USER_EMAIL\",\"vpsProvider\":\"$VPS_PROVIDER\"}" > /dev/null 2>&1 || true
+fi

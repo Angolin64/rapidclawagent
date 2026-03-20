@@ -105,7 +105,7 @@ export default function Home() {
                 href="/guia" 
                 className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors bg-cyan-400/10 px-6 py-3 rounded-full text-base font-medium border border-cyan-400/20 shadow-lg shadow-cyan-500/10"
               >
-                📖 Guía Paso a Paso (Principiantes)
+                📖 Beginner&apos;s Setup Guide
               </a>
               <a 
                 href="https://www.hostinger.com?REFERRALCODE=SVYAGOLINZTB"

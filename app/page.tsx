@@ -2,6 +2,7 @@ import { PRESETS } from '@/lib/presets';
 import PresetCard from '@/components/PresetCard';
 import Hero from '@/components/Hero';
 import CostEstimator from '@/components/CostEstimator';
+import LeadCaptureForm from '@/components/LeadCaptureForm';
 
 export default function Home() {
   return (
@@ -82,41 +83,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <div className="max-w-3xl mx-auto bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-12">
+      {/* Lead Capture / CTA Section */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="text-center mb-10">
           <h2 className="text-4xl font-bold text-white mb-4">
             Ready to Launch Your Agent?
           </h2>
-          <p className="text-xl text-slate-300 mb-8">
-            Copy-paste one command. 60 seconds later, you have your own AI agent.
+          <p className="text-xl text-slate-300 mb-2">
+            Enter your email and we&apos;ll send you the install guide. 60 seconds to live.
           </p>
-          <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 mb-6 font-mono text-left overflow-x-auto">
-            <code className="text-cyan-400">
-              curl -sSL https://rapidclawagent.com/install.sh | bash
-            </code>
-          </div>
-          <div className="flex flex-col gap-4 items-center">
-            <p className="text-sm text-slate-400">
-              Works on Ubuntu 24.04 LTS • Tested on Hostinger, Hetzner, DigitalOcean
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a 
-                href="/guia" 
-                className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors bg-cyan-400/10 px-6 py-3 rounded-full text-base font-medium border border-cyan-400/20 shadow-lg shadow-cyan-500/10"
-              >
-                📖 Beginner&apos;s Setup Guide
-              </a>
-              <a 
-                href="https://www.hostinger.com?REFERRALCODE=SVYAGOLINZTB"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-white hover:bg-slate-800 transition-colors bg-slate-900 px-6 py-3 rounded-full text-base font-medium border border-slate-700"
-              >
-                ☁️ Get VPS (Hostinger Link)
-              </a>
-            </div>
-          </div>
+          <p className="text-sm text-slate-500">
+            Works on Ubuntu 24.04 LTS • Tested on Hostinger, Hetzner, DigitalOcean
+          </p>
+        </div>
+        <LeadCaptureForm />
+        <div className="flex flex-wrap justify-center gap-4 mt-8">
+          <a 
+            href="/guia" 
+            className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors bg-cyan-400/10 px-6 py-3 rounded-full text-base font-medium border border-cyan-400/20 shadow-lg shadow-cyan-500/10"
+          >
+            📖 Beginner&apos;s Setup Guide
+          </a>
+          <a 
+            href="https://www.hostinger.com?REFERRALCODE=SVYAGOLINZTB"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-white hover:bg-slate-800 transition-colors bg-slate-900 px-6 py-3 rounded-full text-base font-medium border border-slate-700"
+          >
+            ☁️ Get VPS (Hostinger Link)
+          </a>
         </div>
       </section>
 

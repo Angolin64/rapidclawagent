@@ -290,7 +290,7 @@ export TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-}"
 export PRIMARY_MODEL CONTEXT_TOKENS BOOTSTRAP_MAX HEARTBEAT_EVERY HEARTBEAT_MODEL CONFIG_DIR
 
 python3 - << 'PYEOF'
-import json, os, sys
+import json, os
 
 def env(key, default=""):
     return os.environ.get(key, default)
@@ -300,21 +300,17 @@ config = {
         "defaults": {
             "model": env("PRIMARY_MODEL"),
             "contextTokens": int(env("CONTEXT_TOKENS", "50000")),
-            "thinkingDefault": "off",
-            "bootstrapMaxChars": int(env("BOOTSTRAP_MAX", "10000")),
-            "bootstrapTotalMaxChars": 75000,
             "heartbeat": {
                 "every": env("HEARTBEAT_EVERY", "1h"),
                 "model": env("HEARTBEAT_MODEL", "google/gemini-2.5-flash"),
                 "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
-            },
-            "cache": {"retention": "short"}
+            }
         }
     },
     "models": {"providers": {}}
 }
 
-for provider, env_var in [("anthropic", "ANTHROPIC_KEY"), ("google", "GOOGLE_KEY"), ("openrouter", "OPENROUTER_KEY")]:
+for provider, env_var in [("google", "GOOGLE_KEY"), ("anthropic", "ANTHROPIC_KEY"), ("openrouter", "OPENROUTER_KEY")]:
     val = env(env_var)
     if val and len(val) > 8:
         config["models"]["providers"][provider] = {"apiKey": val}

@@ -72,7 +72,7 @@ if [ "$OS" != "ubuntu" ] || [ "$VER" != "24.04" ]; then
     warn "This script is tested on Ubuntu 24.04 LTS"
     warn "Your OS: $OS $VER"
     echo ""
-    read -p "Continue anyway? (y/N) " -n 1 -r REPLY_OS
+    read -p "Continue anyway? (y/N) " -n 1 -r REPLY_OS </dev/tty
     echo
     if [[ ! "${REPLY_OS:-}" =~ ^[Yy]$ ]]; then
         echo "Aborted. Get a fresh Ubuntu 24.04 VPS at: https://www.hostinger.com?REFERRALCODE=SVYAGOLINZTB"
@@ -93,27 +93,31 @@ fi
 
 # ── Preset selection ───────────────────────────────────────────────────────────
 if [ -z "$PRESET_ARG" ]; then
-    echo -e "${CYAN}🎯 Select your agent template:${NC}"
     echo ""
-    echo "  ${MAGENTA}1) 🤖 Personal Assistant${NC} ${YELLOW}(\$15-35/mo)${NC}"
-    echo "     ├─ Email triage & responses"
-    echo "     ├─ Calendar management & reminders"
-    echo "     ├─ Daily briefings"
-    echo "     └─ Research assistance"
+    echo "=========================================="
+    echo "  Select your agent template:"
+    echo "=========================================="
     echo ""
-    echo "  ${BLUE}2) 💼 Business Automation${NC} ${YELLOW}(\$50-100/mo)${NC}"
-    echo "     ├─ Customer support 24/7"
-    echo "     ├─ Content generation"
-    echo "     ├─ Team notifications"
-    echo "     └─ Data analysis"
+    echo "  1) Personal Assistant  (\$15-35/mo)"
+    echo "     - Email triage & responses"
+    echo "     - Calendar management & reminders"
+    echo "     - Daily briefings"
     echo ""
-    echo "  ${GREEN}3) 👨‍💻 Developer Agent${NC} ${YELLOW}(\$30-70/mo)${NC}"
-    echo "     ├─ Code reviews"
-    echo "     ├─ Documentation generation"
-    echo "     ├─ Test automation"
-    echo "     └─ CI/CD monitoring"
+    echo "  2) Business Automation  (\$50-100/mo)"
+    echo "     - Customer support 24/7"
+    echo "     - Content generation"
+    echo "     - Team notifications"
     echo ""
-    read -p "Enter choice [1-3]: " PRESET_CHOICE
+    echo "  3) Developer Agent  (\$30-70/mo)"
+    echo "     - Code reviews"
+    echo "     - Documentation generation"
+    echo "     - CI/CD monitoring"
+    echo ""
+    echo "=========================================="
+    echo ""
+
+    # Read from /dev/tty so it works when piped via curl | bash
+    read -p "Enter choice [1-3]: " PRESET_CHOICE </dev/tty
 
     case "${PRESET_CHOICE:-}" in
         1) PRESET="personal-assistant" ;;
@@ -165,6 +169,13 @@ if command -v openclaw &> /dev/null; then
     OPENCLAW_VERSION=$(openclaw --version 2>&1 | head -n1 || echo "unknown")
     ok "OpenClaw already installed ($OPENCLAW_VERSION)"
 else
+    # Clean up any partial/broken install first
+    NPM_PREFIX=$(npm config get prefix 2>/dev/null || echo "/usr")
+    if [ -d "$NPM_PREFIX/lib/node_modules/openclaw" ]; then
+        warn "Removing previous partial OpenClaw install..."
+        rm -rf "$NPM_PREFIX/lib/node_modules/openclaw" 2>/dev/null || true
+    fi
+
     # npm install as root needs --unsafe-perm
     if [ -z "$SUDO" ]; then
         run_cmd "Install OpenClaw globally" npm install -g openclaw@latest --unsafe-perm
@@ -196,9 +207,9 @@ echo -e "  Get Anthropic key: ${CYAN}https://console.anthropic.com${NC}"
 echo -e "  Get Google key:    ${CYAN}https://aistudio.google.com/apikey${NC}"
 echo ""
 
-read -p "Anthropic API Key (Claude) — press Enter to skip: " ANTHROPIC_KEY
-read -p "Google API Key (Gemini) — press Enter to skip: " GOOGLE_KEY
-read -p "OpenRouter API Key — press Enter to skip: " OPENROUTER_KEY
+read -p "Anthropic API Key (Claude) — press Enter to skip: " ANTHROPIC_KEY </dev/tty
+read -p "Google API Key (Gemini) — press Enter to skip: " GOOGLE_KEY </dev/tty
+read -p "OpenRouter API Key — press Enter to skip: " OPENROUTER_KEY </dev/tty
 
 if [ -z "${ANTHROPIC_KEY:-}" ] && [ -z "${GOOGLE_KEY:-}" ] && [ -z "${OPENROUTER_KEY:-}" ]; then
     die "At least one API key is required. Add your key and run the script again."
@@ -208,9 +219,9 @@ fi
 echo ""
 info "Optional setup"
 echo ""
-read -p "Your email (for the getting-started guide, optional): " USER_EMAIL
+read -p "Your email (for the getting-started guide, optional): " USER_EMAIL </dev/tty
 echo ""
-read -p "Telegram Bot Token (optional — press Enter to skip): " TELEGRAM_TOKEN
+read -p "Telegram Bot Token (optional — press Enter to skip): " TELEGRAM_TOKEN </dev/tty
 
 # ── Model & preset config ──────────────────────────────────────────────────────
 if [ -n "${ANTHROPIC_KEY:-}" ]; then

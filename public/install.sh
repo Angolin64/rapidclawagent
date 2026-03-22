@@ -7,7 +7,8 @@
 # Or with preset: curl -sSL https://rapidclawagent.com/install.sh | bash -s personal-assistant
 #
 
-set -e
+# ── Safety: NO set -e (we handle errors manually with clear messages) ──────────
+set -u  # undefined variables = error
 
 # Colors
 RED='\033[0;31m'
@@ -16,9 +17,31 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Banner
+# ── Helpers ────────────────────────────────────────────────────────────────────
+die() {
+    echo -e "${RED}❌ ERROR: $1${NC}"
+    echo -e "${YELLOW}   If you need help, visit: https://rapidclawagent.com/guia${NC}"
+    exit 1
+}
+
+ok() { echo -e "${GREEN}  ✓ $1${NC}"; }
+info() { echo -e "${CYAN}▶ $1${NC}"; }
+warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+
+run_cmd() {
+    # Run a command, die with a clear message if it fails
+    local description="$1"; shift
+    if ! "$@" > /tmp/rca_cmd.log 2>&1; then
+        echo -e "${RED}❌ Failed: $description${NC}"
+        echo -e "${YELLOW}   Error output:${NC}"
+        tail -5 /tmp/rca_cmd.log | sed 's/^/   /'
+        die "Could not complete: $description"
+    fi
+}
+
+# ── Banner ─────────────────────────────────────────────────────────────────────
 echo -e "${CYAN}"
 cat << "EOF"
   ____             _     _  ____ _                  _                    _   
@@ -28,218 +51,232 @@ cat << "EOF"
  |_| \_\__,_| .__/|_|\__,_|\____|_|\__,_| \_/\_/_/   \_\__, |\___|_| |_|\__|
             |_|                                         |___/                
 
-        Deploy your AI agent in 60 seconds | rapidclawagent.com
+        Your AI Agent — Running 24/7 | rapidclawagent.com
 
 EOF
 echo -e "${NC}"
 
-# Parse args
+# ── Parse args ─────────────────────────────────────────────────────────────────
 PRESET_ARG="${1:-}"
 
-# Detect OS
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS=$ID
-    VER=$VERSION_ID
-else
-    echo -e "${RED}❌ Cannot detect OS. Ubuntu 24.04 LTS required.${NC}"
-    exit 1
+# ── OS Check ───────────────────────────────────────────────────────────────────
+if [ ! -f /etc/os-release ]; then
+    die "Cannot detect OS. Ubuntu 24.04 LTS is required."
 fi
 
-# Skip OS check if DRY_RUN is set
-if [ -z "$DRY_RUN" ]; then
-    if [ "$OS" != "ubuntu" ] || [ "$VER" != "24.04" ]; then
-        echo -e "${YELLOW}⚠️  Warning: This script is tested on Ubuntu 24.04 LTS${NC}"
-        echo -e "${YELLOW}   Your OS: $OS $VER${NC}"
-        read -p "Continue anyway? (y/N) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            exit 1
-        fi
+. /etc/os-release
+OS="${ID:-unknown}"
+VER="${VERSION_ID:-unknown}"
+
+if [ "$OS" != "ubuntu" ] || [ "$VER" != "24.04" ]; then
+    warn "This script is tested on Ubuntu 24.04 LTS"
+    warn "Your OS: $OS $VER"
+    echo ""
+    read -p "Continue anyway? (y/N) " -n 1 -r REPLY_OS
+    echo
+    if [[ ! "${REPLY_OS:-}" =~ ^[Yy]$ ]]; then
+        echo "Aborted. Get a fresh Ubuntu 24.04 VPS at: https://www.hostinger.com?REFERRALCODE=SVYAGOLINZTB"
+        exit 0
     fi
 fi
 
-# Preset selection
+# ── Root detection ─────────────────────────────────────────────────────────────
+if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+    SUDO=""
+    INSTALL_HOME="/root"
+    warn "Running as root — installing to /root"
+else
+    SUDO="sudo"
+    INSTALL_HOME="$HOME"
+    info "Installing as user: ${USER:-$(whoami)}"
+fi
+
+# ── Preset selection ───────────────────────────────────────────────────────────
 if [ -z "$PRESET_ARG" ]; then
     echo -e "${CYAN}🎯 Select your agent template:${NC}"
     echo ""
-    echo "  ${MAGENTA}1) 🤖 Personal Assistant${NC} ${YELLOW}($15-35/mo)${NC}"
+    echo "  ${MAGENTA}1) 🤖 Personal Assistant${NC} ${YELLOW}(\$15-35/mo)${NC}"
     echo "     ├─ Email triage & responses"
     echo "     ├─ Calendar management & reminders"
-    echo "     ├─ Daily briefings & weather"
+    echo "     ├─ Daily briefings"
     echo "     └─ Research assistance"
     echo ""
-    echo "  ${BLUE}2) 💼 Business Automation${NC} ${YELLOW}($50-100/mo)${NC}"
+    echo "  ${BLUE}2) 💼 Business Automation${NC} ${YELLOW}(\$50-100/mo)${NC}"
     echo "     ├─ Customer support 24/7"
-    echo "     ├─ Content generation at scale"
-    echo "     ├─ Team notifications & workflows"
-    echo "     └─ Data analysis & reporting"
+    echo "     ├─ Content generation"
+    echo "     ├─ Team notifications"
+    echo "     └─ Data analysis"
     echo ""
-    echo "  ${GREEN}3) 👨‍💻 Developer Agent${NC} ${YELLOW}($30-70/mo)${NC}"
-    echo "     ├─ Code reviews & suggestions"
+    echo "  ${GREEN}3) 👨‍💻 Developer Agent${NC} ${YELLOW}(\$30-70/mo)${NC}"
+    echo "     ├─ Code reviews"
     echo "     ├─ Documentation generation"
     echo "     ├─ Test automation"
     echo "     └─ CI/CD monitoring"
     echo ""
     read -p "Enter choice [1-3]: " PRESET_CHOICE
 
-    case $PRESET_CHOICE in
+    case "${PRESET_CHOICE:-}" in
         1) PRESET="personal-assistant" ;;
         2) PRESET="business-automation" ;;
         3) PRESET="developer-agent" ;;
-        *) echo -e "${RED}❌ Invalid choice${NC}"; exit 1 ;;
+        *) die "Invalid choice. Run the script again and enter 1, 2, or 3." ;;
     esac
 else
     PRESET="$PRESET_ARG"
 fi
 
-echo -e "${GREEN}✓ Selected: $PRESET${NC}"
+ok "Selected preset: $PRESET"
 echo ""
 
-# Check if running as root or with sudo
-if [ "$EUID" -eq 0 ]; then 
-    echo -e "${YELLOW}⚠️  Running as root. Will install to /root${NC}"
-    INSTALL_USER="root"
-    INSTALL_HOME="/root"
+# ── System dependencies ────────────────────────────────────────────────────────
+info "Installing system dependencies..."
+$SUDO apt-get update -qq > /dev/null 2>&1 || warn "apt-get update had warnings (continuing...)"
+run_cmd "Install curl, wget, git, build-essential" \
+    $SUDO apt-get install -y curl wget git build-essential python3
+
+ok "System dependencies ready"
+
+# ── Node.js ────────────────────────────────────────────────────────────────────
+info "Setting up Node.js..."
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node --version 2>/dev/null || echo "unknown")
+    ok "Node.js already installed ($NODE_VERSION)"
 else
-    INSTALL_USER="$USER"
-    INSTALL_HOME="$HOME"
-    echo -e "${CYAN}ℹ️  Installing as user: $INSTALL_USER${NC}"
+    info "Installing Node.js 22 via NodeSource..."
+    # Download setup script to a temp file first (safer than piping directly)
+    if ! curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/nodesource_setup.sh; then
+        die "Could not download NodeSource setup. Check your internet connection."
+    fi
+    run_cmd "Run NodeSource setup" bash /tmp/nodesource_setup.sh
+    run_cmd "Install nodejs package" $SUDO apt-get install -y nodejs
+    rm -f /tmp/nodesource_setup.sh
+    NODE_VERSION=$(node --version 2>/dev/null || echo "installed")
+    ok "Node.js $NODE_VERSION installed"
 fi
 
-# Dry Run Exit
-if [ -n "$DRY_RUN" ]; then
-    echo -e "${GREEN}✓ Dry run completed (Logic Check OK)${NC}"
-    exit 0
+# Verify node actually works
+if ! node -e "console.log('ok')" > /dev/null 2>&1; then
+    die "Node.js installed but not working. Try: sudo apt-get install -y nodejs"
 fi
 
-# Install system dependencies
-echo -e "${CYAN}📦 Installing system dependencies...${NC}"
-if [ "$EUID" -eq 0 ]; then
-    apt-get update -qq > /dev/null 2>&1
-    apt-get install -y curl wget git build-essential > /dev/null 2>&1
-else
-    echo -e "${YELLOW}⚠️  Need sudo for system packages${NC}"
-    sudo apt-get update -qq > /dev/null 2>&1
-    sudo apt-get install -y curl wget git build-essential > /dev/null 2>&1
-fi
-echo -e "${GREEN}✓ System dependencies installed${NC}"
-
-# Install Node.js
-echo -e "${CYAN}📦 Setting up Node.js...${NC}"
-if ! command -v node &> /dev/null; then
-    echo "  └─ Installing Node.js 22 via NodeSource..."
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - > /dev/null 2>&1
-    apt-get install -y nodejs > /dev/null 2>&1
-    echo -e "${GREEN}  ✓ Node.js installed${NC}"
-else
-    NODE_VERSION=$(node --version)
-    echo -e "${GREEN}  ✓ Node.js already installed ($NODE_VERSION)${NC}"
-fi
-
-# Install OpenClaw
-echo -e "${CYAN}🦞 Installing OpenClaw...${NC}"
-if ! command -v openclaw &> /dev/null; then
-    npm install -g openclaw@latest > /dev/null 2>&1
-    echo -e "${GREEN}✓ OpenClaw installed${NC}"
-else
+# ── OpenClaw ───────────────────────────────────────────────────────────────────
+info "Installing OpenClaw..."
+if command -v openclaw &> /dev/null; then
     OPENCLAW_VERSION=$(openclaw --version 2>&1 | head -n1 || echo "unknown")
-    echo -e "${GREEN}✓ OpenClaw already installed ($OPENCLAW_VERSION)${NC}"
+    ok "OpenClaw already installed ($OPENCLAW_VERSION)"
+else
+    # npm install as root needs --unsafe-perm
+    if [ -z "$SUDO" ]; then
+        run_cmd "Install OpenClaw globally" npm install -g openclaw@latest --unsafe-perm
+    else
+        run_cmd "Install OpenClaw globally" $SUDO npm install -g openclaw@latest
+    fi
+
+    # Verify
+    if ! command -v openclaw &> /dev/null; then
+        # Try to find it and add to PATH
+        NPM_BIN=$(npm bin -g 2>/dev/null || echo "")
+        if [ -n "$NPM_BIN" ] && [ -f "$NPM_BIN/openclaw" ]; then
+            export PATH="$NPM_BIN:$PATH"
+            ok "OpenClaw installed (added $NPM_BIN to PATH)"
+        else
+            die "OpenClaw installed but 'openclaw' command not found. Try: export PATH=\$(npm bin -g):\$PATH"
+        fi
+    else
+        ok "OpenClaw installed"
+    fi
 fi
 
-# API Keys
+# ── API Keys ───────────────────────────────────────────────────────────────────
 echo ""
-echo -e "${CYAN}🔑 API Keys Setup${NC}"
+info "API Keys Setup"
 echo ""
-echo -e "${YELLOW}You'll need at least one API key to continue.${NC}"
+echo -e "${YELLOW}You need at least ONE API key to continue.${NC}"
+echo -e "  Get Anthropic key: ${CYAN}https://console.anthropic.com${NC}"
+echo -e "  Get Google key:    ${CYAN}https://aistudio.google.com/apikey${NC}"
 echo ""
 
-read -p "Anthropic API Key (for Claude): " ANTHROPIC_KEY
-read -p "Google API Key (for Gemini): " GOOGLE_KEY
-read -p "OpenRouter API Key (optional, for DeepSeek/etc): " OPENROUTER_KEY
+read -p "Anthropic API Key (Claude) — press Enter to skip: " ANTHROPIC_KEY
+read -p "Google API Key (Gemini) — press Enter to skip: " GOOGLE_KEY
+read -p "OpenRouter API Key — press Enter to skip: " OPENROUTER_KEY
 
-if [ -z "$ANTHROPIC_KEY" ] && [ -z "$GOOGLE_KEY" ]; then
-    echo -e "${RED}❌ At least one API key is required${NC}"
-    exit 1
+if [ -z "${ANTHROPIC_KEY:-}" ] && [ -z "${GOOGLE_KEY:-}" ] && [ -z "${OPENROUTER_KEY:-}" ]; then
+    die "At least one API key is required. Add your key and run the script again."
 fi
 
-# Email capture (for install tracking + onboarding)
+# ── Email & Telegram ───────────────────────────────────────────────────────────
 echo ""
-echo -e "${CYAN}📧 Onboarding${NC}"
+info "Optional setup"
 echo ""
-read -p "Your email (optional — we'll send you the getting-started guide): " USER_EMAIL
+read -p "Your email (for the getting-started guide, optional): " USER_EMAIL
+echo ""
+read -p "Telegram Bot Token (optional — press Enter to skip): " TELEGRAM_TOKEN
 
-# Telegram Bot Token (optional)
-echo ""
-echo -e "${CYAN}💬 Messaging Channels${NC}"
-echo ""
-read -p "Telegram Bot Token (optional, press Enter to skip): " TELEGRAM_TOKEN
-
-# Set model based on available keys
-if [ -n "$ANTHROPIC_KEY" ]; then
-    PRIMARY_MODEL="anthropic/claude-sonnet-4.5"
-elif [ -n "$GOOGLE_KEY" ]; then
+# ── Model & preset config ──────────────────────────────────────────────────────
+if [ -n "${ANTHROPIC_KEY:-}" ]; then
+    PRIMARY_MODEL="anthropic/claude-sonnet-4-5"
+elif [ -n "${GOOGLE_KEY:-}" ]; then
     PRIMARY_MODEL="google/gemini-2.5-pro"
 else
-    PRIMARY_MODEL="anthropic/claude-sonnet-4.5"
+    PRIMARY_MODEL="openrouter/deepseek/deepseek-chat"
 fi
 
-# Preset-specific config
 case $PRESET in
     "personal-assistant")
         CONTEXT_TOKENS=50000
         HEARTBEAT_EVERY="1h"
         HEARTBEAT_MODEL="google/gemini-2.5-flash"
         BOOTSTRAP_MAX=10000
-        SKILLS="gog himalaya weather"
-        CHANNELS="telegram whatsapp"
         ;;
     "business-automation")
         CONTEXT_TOKENS=75000
         HEARTBEAT_EVERY="30m"
         HEARTBEAT_MODEL="google/gemini-2.5-flash"
         BOOTSTRAP_MAX=15000
-        SKILLS="slack discord-hub summarize deep-research"
-        CHANNELS="slack discord telegram"
         ;;
     "developer-agent")
         CONTEXT_TOKENS=100000
         HEARTBEAT_EVERY="2h"
         HEARTBEAT_MODEL="google/gemini-2.5-flash"
         BOOTSTRAP_MAX=20000
-        SKILLS="skill-creator summarize"
-        CHANNELS="discord slack"
+        ;;
+    *)
+        CONTEXT_TOKENS=50000
+        HEARTBEAT_EVERY="1h"
+        HEARTBEAT_MODEL="google/gemini-2.5-flash"
+        BOOTSTRAP_MAX=10000
         ;;
 esac
 
-# Generate optimized config
-echo ""
-echo -e "${CYAN}⚙️  Generating optimized config...${NC}"
+# ── Generate config (Python — guaranteed valid JSON) ───────────────────────────
+info "Generating optimized config..."
 
 CONFIG_DIR="$INSTALL_HOME/.openclaw"
 mkdir -p "$CONFIG_DIR"
 
-# Export variables for Python to avoid shell expansion syntax errors
-export ANTHROPIC_KEY GOOGLE_KEY OPENROUTER_KEY PRIMARY_MODEL CONTEXT_TOKENS BOOTSTRAP_MAX HEARTBEAT_EVERY HEARTBEAT_MODEL CONFIG_DIR
+export ANTHROPIC_KEY="${ANTHROPIC_KEY:-}"
+export GOOGLE_KEY="${GOOGLE_KEY:-}"
+export OPENROUTER_KEY="${OPENROUTER_KEY:-}"
+export TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-}"
+export PRIMARY_MODEL CONTEXT_TOKENS BOOTSTRAP_MAX HEARTBEAT_EVERY HEARTBEAT_MODEL CONFIG_DIR
 
-# Use Python to generate valid JSON - safest way to handle keys and commas
-python3 - << 'EOF'
-import json, os
+python3 - << 'PYEOF'
+import json, os, sys
 
-def get_env(key, default=""):
+def env(key, default=""):
     return os.environ.get(key, default)
 
 config = {
     "agents": {
         "defaults": {
-            "model": get_env("PRIMARY_MODEL"),
-            "contextTokens": int(get_env("CONTEXT_TOKENS", "50000")),
+            "model": env("PRIMARY_MODEL"),
+            "contextTokens": int(env("CONTEXT_TOKENS", "50000")),
             "thinkingDefault": "off",
-            "bootstrapMaxChars": int(get_env("BOOTSTRAP_MAX", "10000")),
+            "bootstrapMaxChars": int(env("BOOTSTRAP_MAX", "10000")),
             "bootstrapTotalMaxChars": 75000,
             "heartbeat": {
-                "every": get_env("HEARTBEAT_EVERY", "1h"),
-                "model": get_env("HEARTBEAT_MODEL", "google/gemini-2.5-flash"),
+                "every": env("HEARTBEAT_EVERY", "1h"),
+                "model": env("HEARTBEAT_MODEL", "google/gemini-2.5-flash"),
                 "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
             },
             "cache": {"retention": "short"}
@@ -248,51 +285,38 @@ config = {
     "models": {"providers": {}}
 }
 
-# Add keys if they have content and don't look like dummy text
-for key_name, env_var in [("anthropic", "ANTHROPIC_KEY"), ("google", "GOOGLE_KEY"), ("openrouter", "OPENROUTER_KEY")]:
-    val = get_env(env_var)
-    if val and len(val) > 10 and "read -p" not in val:
-        config["models"]["providers"][key_name] = {"apiKey": val}
+for provider, env_var in [("anthropic", "ANTHROPIC_KEY"), ("google", "GOOGLE_KEY"), ("openrouter", "OPENROUTER_KEY")]:
+    val = env(env_var)
+    if val and len(val) > 8:
+        config["models"]["providers"][provider] = {"apiKey": val}
 
-config_path = os.path.join(get_env("CONFIG_DIR"), "openclaw.json")
+telegram = env("TELEGRAM_TOKEN")
+if telegram and len(telegram) > 8:
+    config["channels"] = {
+        "telegram": {"token": telegram, "enabled": True}
+    }
+
+config_path = os.path.join(env("CONFIG_DIR"), "openclaw.json")
 with open(config_path, "w") as f:
     json.dump(config, f, indent=2)
-EOF
+
+print(f"Config written to: {config_path}")
+PYEOF
 
 if [ $? -ne 0 ]; then
-    echo -e "${YELLOW}⚠️  Python generation failed, using fallback...${NC}"
-    # Fallback with basic shell escaping
-    cat > "$CONFIG_DIR/openclaw.json" << EOF
-{
-  "agents": { "defaults": { "model": "$PRIMARY_MODEL", "contextTokens": $CONTEXT_TOKENS } },
-  "models": { "providers": { "anthropic": { "apiKey": "$ANTHROPIC_KEY" }, "google": { "apiKey": "$GOOGLE_KEY" } } }
-}
-EOF
+    die "Config generation failed. Make sure python3 is installed: sudo apt-get install -y python3"
 fi
 
-# Add Telegram if provided
-if [ -n "$TELEGRAM_TOKEN" ]; then
-    # Use jq to add telegram config (if available) or manual append
-    if command -v jq &> /dev/null; then
-        TMP_CONFIG=$(mktemp)
-        jq --arg token "$TELEGRAM_TOKEN" '.channels.telegram = {token: $token, enabled: true}' "$CONFIG_DIR/openclaw.json" > "$TMP_CONFIG"
-        mv "$TMP_CONFIG" "$CONFIG_DIR/openclaw.json"
-        echo -e "${GREEN}  ✓ Telegram configured${NC}"
-    else
-        echo -e "${YELLOW}  ⚠️  jq not found, Telegram config skipped (add manually)${NC}"
-    fi
-fi
+chmod 600 "$CONFIG_DIR/openclaw.json"
+ok "Config generated and secured (chmod 600)"
 
-echo -e "${GREEN}✓ Config generated at $CONFIG_DIR/openclaw.json${NC}"
-
-# Initialize workspace
-echo -e "${CYAN}📁 Setting up workspace...${NC}"
-WORKSPACE_DIR="$INSTALL_HOME/.openclaw/workspace"
-mkdir -p "$WORKSPACE_DIR"
+# ── Workspace ──────────────────────────────────────────────────────────────────
+info "Setting up workspace..."
+WORKSPACE_DIR="$CONFIG_DIR/workspace"
 mkdir -p "$WORKSPACE_DIR/memory"
+chmod 700 "$WORKSPACE_DIR"
 
-# Create SOUL.md
-cat > "$WORKSPACE_DIR/SOUL.md" << 'EOF'
+cat > "$WORKSPACE_DIR/SOUL.md" << 'SOULEOF'
 # SOUL.md - Who You Are
 
 You are an AI assistant deployed via **RapidClawAgent**.
@@ -302,35 +326,28 @@ You are an AI assistant deployed via **RapidClawAgent**.
 - Be genuinely helpful, not performatively helpful. Skip filler; do the work.
 - Have opinions, but stay practical.
 - Be resourceful before asking: read files, check config/schema, run diagnostics.
-- Earn trust through competence: be careful with anything external; be bold internally.
-
-## Your Mission
-
-Your primary goal is to assist your user with their daily tasks, automate workflows, and provide intelligent, context-aware support 24/7.
+- Earn trust through competence.
 
 ## Boundaries
 
 - Private things stay private.
 - When in doubt about external actions (posting, emailing, spending money), ask.
-- You're an assistant, not an autonomous agent—always prioritize user intent.
-EOF
+SOULEOF
 
-# Create USER.md
-cat > "$WORKSPACE_DIR/USER.md" << EOF
+cat > "$WORKSPACE_DIR/USER.md" << USEREOF
 # USER.md - About Your Human
 
-- **Name:** [Your name here]
-- **Timezone:** [Your timezone]
+- **Name:** [Edit this — your name]
+- **Timezone:** [Edit this — your timezone, e.g. America/New_York]
 - **Preset:** $PRESET
 
 ## Preferences
 
-- Add your preferences here
-- Customize how your agent should behave
-EOF
+- Add your communication preferences here
+- How formal/casual should the agent be?
+USEREOF
 
-# Create HEARTBEAT.md
-cat > "$WORKSPACE_DIR/HEARTBEAT.md" << 'EOF'
+cat > "$WORKSPACE_DIR/HEARTBEAT.md" << 'HBEOF'
 # HEARTBEAT.md
 
 ## Daily checklist (run periodically)
@@ -349,105 +366,85 @@ cat > "$WORKSPACE_DIR/HEARTBEAT.md" << 'EOF'
 
 - Nothing urgent found
 - Late night hours (unless critical)
-- User is busy or offline
-EOF
+HBEOF
 
-# Create MEMORY.md
-cat > "$WORKSPACE_DIR/MEMORY.md" << 'EOF'
+cat > "$WORKSPACE_DIR/MEMORY.md" << 'MEMEOF'
 # MEMORY.md
 
 ## Setup
-- Deployed via RapidClawAgent installer
+- Deployed via RapidClawAgent
 - Optimized for cost efficiency (60-80% savings)
 
 ## Notes
 - Add important memories here as you learn about your user
-EOF
+MEMEOF
 
-# Create initial daily memory file
 TODAY=$(date +%Y-%m-%d)
-cat > "$WORKSPACE_DIR/memory/$TODAY.md" << EOF
+cat > "$WORKSPACE_DIR/memory/$TODAY.md" << DAYEOF
 # $TODAY
 
 ## Deployment
-- Installed RapidClawAgent preset: $PRESET
-- Initial setup completed
-EOF
+- Installed RapidClawAgent — preset: $PRESET
+- Initial setup completed successfully
+DAYEOF
 
-echo -e "${GREEN}✓ Workspace initialized at $WORKSPACE_DIR${NC}"
+ok "Workspace initialized at $WORKSPACE_DIR"
 
-# Security hardening (basic)
-echo -e "${CYAN}🔒 Applying basic security...${NC}"
-
-# Set restrictive permissions on config
-chmod 600 "$CONFIG_DIR/openclaw.json"
-echo -e "${GREEN}  ✓ Config file permissions: 600${NC}"
-
-# Set workspace permissions
-chmod 700 "$WORKSPACE_DIR"
-echo -e "${GREEN}  ✓ Workspace permissions: 700${NC}"
-
-echo -e "${GREEN}✓ Basic security applied${NC}"
-
-# Start OpenClaw Gateway
+# ── Start Gateway ──────────────────────────────────────────────────────────────
 echo ""
-echo -e "${CYAN}🚀 Starting OpenClaw Gateway...${NC}"
-openclaw gateway start > /dev/null 2>&1 || true
-sleep 3
+info "Starting OpenClaw Gateway..."
+openclaw gateway start > /tmp/rca_gateway.log 2>&1 || true
+sleep 4
 
-# Check if gateway is running
 if openclaw gateway status > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ Gateway started successfully${NC}"
+    ok "Gateway is running!"
 else
-    echo -e "${YELLOW}⚠️  Gateway start may have failed, check with: openclaw gateway status${NC}"
+    warn "Gateway may not have started. Check with: openclaw gateway status"
+    warn "Log: $(tail -3 /tmp/rca_gateway.log 2>/dev/null || echo 'no log')"
 fi
 
-# Final success message
+# ── Success ────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✅ SUCCESS! Your AI agent is running!${NC}"
+echo -e "${GREEN}✅  Your AI Agent is live!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${CYAN}📊 Deployment Summary:${NC}"
-echo ""
-echo -e "  Preset:         ${YELLOW}$PRESET${NC}"
-echo -e "  Primary Model:  ${YELLOW}$PRIMARY_MODEL${NC}"
-echo -e "  Context Limit:  ${YELLOW}$CONTEXT_TOKENS tokens${NC}"
-echo -e "  Heartbeat:      ${YELLOW}Every $HEARTBEAT_EVERY${NC}"
-echo -e "  Est. Cost:      ${YELLOW}\$15-100/mo${NC} (depending on usage)"
+echo -e "  Preset:        ${YELLOW}$PRESET${NC}"
+echo -e "  Primary Model: ${YELLOW}$PRIMARY_MODEL${NC}"
+echo -e "  Context Limit: ${YELLOW}$CONTEXT_TOKENS tokens${NC}"
+echo -e "  Heartbeat:     ${YELLOW}Every $HEARTBEAT_EVERY${NC}"
+echo -e "  Est. Cost:     ${YELLOW}\$15-100/mo${NC} depending on usage"
 echo ""
 echo -e "${CYAN}🎯 Next Steps:${NC}"
+echo "  1. Check status:   ${YELLOW}openclaw status${NC}"
+echo "  2. Chat via CLI:   ${YELLOW}openclaw chat${NC}"
+echo "  3. View logs:      ${YELLOW}openclaw gateway logs${NC}"
+echo "  4. Personalize:    ${YELLOW}nano ~/.openclaw/workspace/SOUL.md${NC}"
 echo ""
-echo "  1. Check status:  ${YELLOW}openclaw status${NC}"
-echo "  2. Chat via CLI:  ${YELLOW}openclaw chat${NC}"
-echo "  3. View logs:     ${YELLOW}openclaw gateway logs${NC}"
-echo "  4. Customize:     ${YELLOW}Edit ~/.openclaw/workspace/SOUL.md${NC}"
-echo ""
-if [ -n "$TELEGRAM_TOKEN" ]; then
-    echo -e "${CYAN}💬 Your agent is connected to Telegram!${NC}"
-    echo -e "   Send a message to your bot to start chatting."
+if [ -n "${TELEGRAM_TOKEN:-}" ]; then
+    echo -e "${CYAN}💬 Telegram is connected! Send your bot a message to start.${NC}"
     echo ""
 fi
 echo -e "${CYAN}📚 Resources:${NC}"
-echo ""
-echo "  Docs:        ${YELLOW}https://docs.openclaw.ai${NC}"
-echo "  Community:   ${YELLOW}https://discord.com/invite/clawd${NC}"
-echo "  Learn more:  ${YELLOW}https://rapidclawagent.com${NC}"
+echo "  Docs:      ${YELLOW}https://docs.openclaw.ai${NC}"
+echo "  Guide:     ${YELLOW}https://rapidclawagent.com/guia${NC}"
+echo "  Community: ${YELLOW}https://discord.com/invite/clawd${NC}"
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
-echo -e "${MAGENTA}🦞 Built with RapidClawAgent | Save 60-80% on AI costs${NC}"
+echo -e "${MAGENTA}🦞 Built with RapidClawAgent — Own your AI, own your data${NC}"
 echo ""
 
-# Ping install-complete API (silent, non-blocking)
-if [ -n "$USER_EMAIL" ]; then
+# ── Ping install-complete (silent) ─────────────────────────────────────────────
+if [ -n "${USER_EMAIL:-}" ]; then
     VPS_PROVIDER="Unknown"
-    # Try to detect VPS provider from hostname/IP
-    if curl -sf --max-time 2 https://api.ipify.org > /tmp/rca_ip.txt 2>/dev/null; then
-        VPS_PROVIDER=$(curl -sf --max-time 3 "https://ipinfo.io/$(cat /tmp/rca_ip.txt)/org" 2>/dev/null | sed 's/AS[0-9]* //' | cut -c1-30 || echo "Unknown")
+    if curl -sf --max-time 3 https://api.ipify.org -o /tmp/rca_ip.txt 2>/dev/null; then
+        VPS_PROVIDER=$(curl -sf --max-time 3 "https://ipinfo.io/$(cat /tmp/rca_ip.txt)/org" 2>/dev/null \
+            | sed 's/AS[0-9]* //' | cut -c1-30 || echo "Unknown")
         rm -f /tmp/rca_ip.txt
     fi
     curl -sf --max-time 5 -X POST "https://rapidclawagent.com/api/install-complete" \
         -H "Content-Type: application/json" \
-        -d "{\"email\":\"$USER_EMAIL\",\"vpsProvider\":\"$VPS_PROVIDER\"}" > /dev/null 2>&1 || true
+        -d "{\"email\":\"${USER_EMAIL}\",\"vpsProvider\":\"${VPS_PROVIDER}\"}" \
+        > /dev/null 2>&1 || true
 fi

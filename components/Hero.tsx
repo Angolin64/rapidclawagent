@@ -9,26 +9,31 @@ export default function Hero() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
           </span>
           <span className="text-sm font-medium text-cyan-300">
-            Deploy in 60 seconds • Save 60-80% on costs
+            Free to deploy • Saves 60-80% vs hosted AI tools
           </span>
         </div>
 
         {/* Main Headline */}
         <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-          Launch Your
+          Your Own AI Assistant.
           <br />
           <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            AI Agent
+            Working 24/7.
           </span>
           <br />
-          In 60 Seconds
+          One Command.
         </h1>
 
         {/* Subheadline */}
-        <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-3xl mx-auto">
-          Deploy OpenClaw on your VPS with zero config. 
-          Cost-optimized templates. Battle-tested security. 
-          Your own AI assistant, running 24/7.
+        <p className="text-xl md:text-2xl text-slate-400 mb-6 max-w-3xl mx-auto">
+          Stop paying $100/month for AI tools you don't control.
+          Deploy your own agent on your VPS in 60 seconds —
+          your data, your server, your rules.
+        </p>
+
+        {/* ROI hook */}
+        <p className="text-base md:text-lg text-cyan-300/80 mb-12 max-w-2xl mx-auto italic">
+          "Charge clients $500/mo for automation that costs you $20/mo in API calls."
         </p>
 
         {/* CTA Buttons */}
@@ -37,15 +42,22 @@ export default function Hero() {
             href="#presets"
             className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold px-8 py-4 rounded-lg transition-all text-lg shadow-lg shadow-cyan-500/50"
           >
-            🚀 Get Started Free
+            🚀 Deploy My Agent — Free
           </a>
           <a
-            href="https://github.com/yourusername/rapidclawagent"
+            href="https://github.com/Angolin64/rapidclawagent"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-8 py-4 rounded-lg transition-all text-lg border border-slate-700"
           >
             ⭐ View on GitHub
           </a>
         </div>
+
+        {/* Urgency nudge */}
+        <p className="mt-6 text-sm text-slate-500">
+          🔥 Join the first 100 users and get priority support — no waitlist, no credit card.
+        </p>
 
         {/* Social Proof */}
         <div className="mt-16 flex flex-wrap justify-center gap-8 text-slate-500">
@@ -57,7 +69,7 @@ export default function Hero() {
           </div>
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 001.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span>Open source</span>
           </div>
@@ -66,6 +78,12 @@ export default function Hero() {
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span>MIT License</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>Your data stays yours</span>
           </div>
         </div>
       </div>

@@ -14,10 +14,10 @@ export default function Home() {
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Choose Your Agent Template
+            Pick Your Setup. Deploy in 60 Seconds.
           </h2>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Pick a preset optimized for your use case. Deploy in 60 seconds.
+            Pre-built templates for real-world use cases. One command and your agent is live — no DevOps, no config hell.
           </p>
         </div>
 
@@ -37,41 +37,44 @@ export default function Home() {
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Why RapidClawAgent?
+            What Can Your Agent Do For You?
           </h2>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+            This isn&apos;t another AI chatbot. It&apos;s your 24/7 digital employee — on your server, under your control.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {[
             {
-              icon: "⚡",
-              title: "60-Second Deploy",
-              description: "One command. No config files. Your agent is live instantly."
+              icon: "💬",
+              title: "Answer Messages Automatically",
+              description: "Your agent replies to customers on Telegram, WhatsApp, and more — while you sleep."
             },
             {
               icon: "💰",
-              title: "Cost Optimized",
-              description: "Save 60-80% on API costs with intelligent model routing."
+              title: "Save 60-80% on AI Costs",
+              description: "Smart model routing cuts your API bill drastically vs paying for ChatGPT Plus or Claude Pro."
+            },
+            {
+              icon: "📅",
+              title: "Monitor Your Inbox & Calendar",
+              description: "Get daily briefings, meeting alerts, and task summaries delivered straight to your phone."
             },
             {
               icon: "🔒",
-              title: "Secure by Default",
-              description: "Hardened VPS, firewall rules, and SSH security out of the box."
+              title: "Your Data, Your Server",
+              description: "No third-party cloud snooping. Everything runs on your VPS. Your data stays yours."
             },
             {
-              icon: "🔄",
-              title: "Always On",
-              description: "24/7 uptime. Your agent never sleeps or forgets context."
-            },
-            {
-              icon: "🎯",
-              title: "Battle-Tested Templates",
-              description: "Presets based on real-world deployments and best practices."
+              icon: "⚡",
+              title: "Live in 60 Seconds",
+              description: "One command. No Docker knowledge, no config files. Just paste and run."
             },
             {
               icon: "🚀",
-              title: "Zero DevOps",
-              description: "No Docker, no Node.js version hell. Just copy-paste and go."
+              title: "Charge Clients for It",
+              description: "Deploy agents for clients at $300-$500/mo. Your cost? ~$20/mo in API calls."
             }
           ].map((feature, i) => (
             <div key={i} className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 hover:border-cyan-500/50 transition-all">
@@ -87,13 +90,13 @@ export default function Home() {
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-10">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Launch Your Agent?
+            Ready to Own Your AI Agent?
           </h2>
           <p className="text-xl text-slate-300 mb-2">
-            Enter your email and we&apos;ll send you the install guide. 60 seconds to live.
+            Enter your email and get the install guide. Your agent will be live in 60 seconds.
           </p>
           <p className="text-sm text-slate-500">
-            Works on Ubuntu 24.04 LTS • Tested on Hostinger, Hetzner, DigitalOcean
+            🔥 First 100 users get priority support • Ubuntu 24.04 LTS • Tested on Hostinger, Hetzner, DigitalOcean
           </p>
         </div>
         <LeadCaptureForm />

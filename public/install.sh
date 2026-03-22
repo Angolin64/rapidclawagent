@@ -422,7 +422,11 @@ ok "Workspace initialized at $WORKSPACE_DIR"
 # ── Start Gateway ──────────────────────────────────────────────────────────────
 echo ""
 info "Starting OpenClaw Gateway..."
-openclaw gateway start > /tmp/rca_gateway.log 2>&1 || true
+
+# Install the gateway service first (required on fresh installs)
+openclaw gateway install > /tmp/rca_gateway.log 2>&1 || true
+sleep 2
+openclaw gateway start >> /tmp/rca_gateway.log 2>&1 || true
 sleep 4
 
 if openclaw gateway status > /dev/null 2>&1; then
@@ -434,9 +438,9 @@ fi
 
 # ── Success ────────────────────────────────────────────────────────────────────
 echo ""
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "================================================================="
 echo -e "${GREEN}✅  Your AI Agent is live!${NC}"
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "================================================================="
 echo ""
 echo -e "${CYAN}📊 Deployment Summary:${NC}"
 echo -e "  Preset:        ${YELLOW}$PRESET${NC}"
@@ -445,23 +449,23 @@ echo -e "  Context Limit: ${YELLOW}$CONTEXT_TOKENS tokens${NC}"
 echo -e "  Heartbeat:     ${YELLOW}Every $HEARTBEAT_EVERY${NC}"
 echo -e "  Est. Cost:     ${YELLOW}\$15-100/mo${NC} depending on usage"
 echo ""
-echo -e "${CYAN}🎯 Next Steps:${NC}"
-echo "  1. Check status:   ${YELLOW}openclaw status${NC}"
-echo "  2. Chat via CLI:   ${YELLOW}openclaw chat${NC}"
-echo "  3. View logs:      ${YELLOW}openclaw gateway logs${NC}"
-echo "  4. Personalize:    ${YELLOW}nano ~/.openclaw/workspace/SOUL.md${NC}"
+echo "Next Steps:"
+echo "  1. Check status:   openclaw status"
+echo "  2. Chat via CLI:   openclaw chat"
+echo "  3. View logs:      openclaw gateway logs"
+echo "  4. Personalize:    nano ~/.openclaw/workspace/SOUL.md"
 echo ""
 if [ -n "${TELEGRAM_TOKEN:-}" ]; then
-    echo -e "${CYAN}💬 Telegram is connected! Send your bot a message to start.${NC}"
+    echo "  Telegram is connected! Send your bot a message to start."
     echo ""
 fi
-echo -e "${CYAN}📚 Resources:${NC}"
-echo "  Docs:      ${YELLOW}https://docs.openclaw.ai${NC}"
-echo "  Guide:     ${YELLOW}https://rapidclawagent.com/guia${NC}"
-echo "  Community: ${YELLOW}https://discord.com/invite/clawd${NC}"
+echo "Resources:"
+echo "  Docs:      https://docs.openclaw.ai"
+echo "  Guide:     https://rapidclawagent.com/guia"
+echo "  Community: https://discord.com/invite/clawd"
 echo ""
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${MAGENTA}🦞 Built with RapidClawAgent — Own your AI, own your data${NC}"
+echo "================================================================="
+echo "Built with RapidClawAgent — Own your AI, own your data"
 echo ""
 
 # ── Ping install-complete (silent) ─────────────────────────────────────────────

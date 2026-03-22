@@ -202,32 +202,50 @@ fi
 echo ""
 info "API Keys Setup"
 echo ""
-echo -e "${YELLOW}You need at least ONE API key to continue.${NC}"
-echo -e "  Get Anthropic key: ${CYAN}https://console.anthropic.com${NC}"
-echo -e "  Get Google key:    ${CYAN}https://aistudio.google.com/apikey${NC}"
+echo "You need at least ONE API key to continue."
+echo ""
+echo "  RECOMMENDED (free, no credit card):"
+echo "  Google Gemini key -> https://aistudio.google.com/apikey"
+echo ""
+echo "  OTHER OPTIONS:"
+echo "  Anthropic (Claude) -> https://console.anthropic.com"
+echo "  OpenRouter (Llama, DeepSeek, etc.) -> https://openrouter.ai/keys"
 echo ""
 
+read -p "Google API Key (Gemini) [RECOMMENDED, free]: " GOOGLE_KEY </dev/tty
 read -p "Anthropic API Key (Claude) — press Enter to skip: " ANTHROPIC_KEY </dev/tty
-read -p "Google API Key (Gemini) — press Enter to skip: " GOOGLE_KEY </dev/tty
 read -p "OpenRouter API Key — press Enter to skip: " OPENROUTER_KEY </dev/tty
 
 if [ -z "${ANTHROPIC_KEY:-}" ] && [ -z "${GOOGLE_KEY:-}" ] && [ -z "${OPENROUTER_KEY:-}" ]; then
-    die "At least one API key is required. Add your key and run the script again."
+    die "At least one API key is required. Get a free Google key at: https://aistudio.google.com/apikey"
 fi
 
-# ── Email & Telegram ───────────────────────────────────────────────────────────
+# ── Email (required for support) & Telegram ───────────────────────────────────
 echo ""
-info "Optional setup"
+info "Account Setup"
 echo ""
-read -p "Your email (for the getting-started guide, optional): " USER_EMAIL </dev/tty
+echo "Your email is required to:"
+echo "  - Send you the setup guide"
+echo "  - Provide support if something goes wrong"
+echo "  - Notify you of important updates"
+echo ""
+
+USER_EMAIL=""
+while [ -z "${USER_EMAIL:-}" ]; do
+    read -p "Your email address: " USER_EMAIL </dev/tty
+    if [ -z "${USER_EMAIL:-}" ]; then
+        echo "  Email is required. Please enter your email address."
+    fi
+done
+
 echo ""
 read -p "Telegram Bot Token (optional — press Enter to skip): " TELEGRAM_TOKEN </dev/tty
 
 # ── Model & preset config ──────────────────────────────────────────────────────
-if [ -n "${ANTHROPIC_KEY:-}" ]; then
+if [ -n "${GOOGLE_KEY:-}" ]; then
+    PRIMARY_MODEL="google/gemini-2.5-flash"
+elif [ -n "${ANTHROPIC_KEY:-}" ]; then
     PRIMARY_MODEL="anthropic/claude-sonnet-4-5"
-elif [ -n "${GOOGLE_KEY:-}" ]; then
-    PRIMARY_MODEL="google/gemini-2.5-pro"
 else
     PRIMARY_MODEL="openrouter/deepseek/deepseek-chat"
 fi

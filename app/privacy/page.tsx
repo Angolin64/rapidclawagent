@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: 'Our commitment to protecting your privacy and personal information.',
 };
 
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 async function getPrivacyContent() {
   const filePath = path.join(process.cwd(), 'content', 'PRIVACY_POLICY.md');
   const fileContents = fs.readFileSync(filePath, 'utf8');

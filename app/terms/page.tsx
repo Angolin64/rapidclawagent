@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: 'Terms and conditions for using RapidClawAgent services.',
 };
 
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 async function getTermsContent() {
   const filePath = path.join(process.cwd(), 'content', 'TERMS_AND_CONDITIONS.md');
   const fileContents = fs.readFileSync(filePath, 'utf8');

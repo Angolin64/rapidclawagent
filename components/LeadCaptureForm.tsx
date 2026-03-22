@@ -5,7 +5,7 @@ import { useState } from 'react';
 export default function LeadCaptureForm() {
   const [step, setStep] = useState<'form' | 'success'>('form');
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ firstName: '', email: '', language: 'en' });
+  const [form, setForm] = useState({ firstName: '', email: '', language: 'en', consent: false });
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,6 +85,38 @@ export default function LeadCaptureForm() {
           <option value="en">🇺🇸 English</option>
           <option value="es">🇪🇸 Español</option>
         </select>
+
+        {/* GDPR Consent Checkbox */}
+        <div className="flex items-start gap-3 pt-2">
+          <input
+            type="checkbox"
+            id="consent"
+            required
+            checked={form.consent}
+            onChange={e => setForm({ ...form, consent: e.target.checked })}
+            className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-900"
+          />
+          <label htmlFor="consent" className="text-sm text-slate-400 leading-tight">
+            I agree to the{' '}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:text-cyan-300 underline"
+            >
+              Privacy Policy
+            </a>{' '}
+            and{' '}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:text-cyan-300 underline"
+            >
+              Terms & Conditions
+            </a>
+          </label>
+        </div>
       </div>
 
       {error && <p className="text-red-400 text-sm mt-3 text-center">{error}</p>}

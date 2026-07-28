@@ -7,6 +7,7 @@ import html from 'remark-html';
 export const metadata: Metadata = {
   title: 'Privacy Policy | RapidClawAgent',
   description: 'Our commitment to protecting your privacy and personal information.',
+  alternates: { canonical: '/privacy' },
 };
 
 export const dynamic = 'force-static';

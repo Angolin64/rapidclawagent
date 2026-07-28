@@ -1,8 +1,13 @@
+import type { Metadata } from 'next';
 import { PRESETS } from '@/lib/presets';
 import PresetCard from '@/components/PresetCard';
 import Hero from '@/components/Hero';
 import CostEstimator from '@/components/CostEstimator';
 import LeadCaptureForm from '@/components/LeadCaptureForm';
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 export default function Home() {
   return (

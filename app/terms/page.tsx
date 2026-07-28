@@ -7,6 +7,7 @@ import html from 'remark-html';
 export const metadata: Metadata = {
   title: 'Terms & Conditions | RapidClawAgent',
   description: 'Terms and conditions for using RapidClawAgent services.',
+  alternates: { canonical: '/terms' },
 };
 
 export const dynamic = 'force-static';

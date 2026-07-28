@@ -13,6 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // www is the production domain: the apex 308s to it, and robots.txt and
+  // sitemap.xml both point at www. Every canonical below resolves against this.
+  metadataBase: new URL("https://www.rapidclawagent.com"),
   title: "RapidClawAgent — Deploy Your AI Agent in 60 Seconds",
   description: "One command. Your own AI agent running 24/7 on your VPS. Cost-optimized, Telegram-ready, open-source.",
 };
